@@ -1,19 +1,333 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'jacoco'
+    id 'checkstyle'
+    id 'org.openapi.generator' version '6.6.0'
+    id 'com.diffplug.spotless' version '6.25.0'
+    id 'org.liquibase.gradle' version '2.2.0'
 }
 
 group = 'ru.mentee.power'
-version = '1.0-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+ext {
+    versions = [
+            springdoc        : '2.5.0',
+            postgresql       : '42.7.3',
+            lombok           : '1.18.30',
+            mapstruct        : '1.5.5.Final',
+            mapstructLombok  : '0.2.0',
+            slf4j            : '2.0.9',
+            logback          : '1.4.14',
+            junit            : '5.10.0',
+            assertj          : '3.24.2',
+            mockito          : '5.7.0',
+            testcontainers   : '1.19.7',
+            h2               : '2.2.224',
+            googleJavaFormat : '1.17.0',
+            caffeine         : '3.1.8',
+            springKafka      : '3.1.4',
+            liquibase        : '4.27.0'
+    ]
 }
 
+dependencies {
+    // === SPRING BOOT ===
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // === KAFKA ===
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // === DATABASE & MIGRATIONS ===
+    implementation "org.liquibase:liquibase-core:${versions.liquibase}"
+    runtimeOnly "org.postgresql:postgresql:${versions.postgresql}"
+    runtimeOnly "com.h2database:h2:${versions.h2}"
+
+    // === LIQUIBASE RUNTIME ===
+    liquibaseRuntime "org.liquibase:liquibase-core:${versions.liquibase}"
+    liquibaseRuntime "org.postgresql:postgresql:${versions.postgresql}"
+    liquibaseRuntime "ch.qos.logback:logback-classic:${versions.logback}"
+    liquibaseRuntime "info.picocli:picocli:4.7.5"
+    liquibaseRuntime "org.yaml:snakeyaml:2.2"
+    liquibaseRuntime sourceSets.main.output
+
+    // === VALIDATION ===
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    // === MAPSTRUCT + LOMBOK ===
+    implementation "org.mapstruct:mapstruct:${versions.mapstruct}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${versions.mapstruct}"
+
+    compileOnly "org.projectlombok:lombok:${versions.lombok}"
+    annotationProcessor "org.projectlombok:lombok:${versions.lombok}"
+    annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${versions.mapstructLombok}"
+
+    // === LOGGING ===
+    implementation "org.slf4j:slf4j-api:${versions.slf4j}"
+    implementation "ch.qos.logback:logback-classic:${versions.logback}"
+
+    // === OpenAPI ===
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${versions.springdoc}"
+    implementation "org.openapitools:jackson-databind-nullable:0.2.6"
+    implementation "io.swagger.core.v3:swagger-annotations:2.2.19"
+
+    // === TESTING ===
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation "org.junit.jupiter:junit-jupiter:${versions.junit}"
+    testImplementation "org.mockito:mockito-core:${versions.mockito}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${versions.mockito}"
+    testImplementation "org.assertj:assertj-core:${versions.assertj}"
+    testImplementation "org.testcontainers:testcontainers:${versions.testcontainers}"
+    testImplementation "org.testcontainers:junit-jupiter:${versions.testcontainers}"
+    testImplementation "org.testcontainers:postgresql:${versions.testcontainers}"
+    testImplementation "org.testcontainers:kafka:${versions.testcontainers}"
+
+    testCompileOnly "org.projectlombok:lombok:${versions.lombok}"
+    testAnnotationProcessor "org.projectlombok:lombok:${versions.lombok}"
+
+    runtimeOnly "org.testcontainers:postgresql:${versions.testcontainers}"
+    runtimeOnly "org.testcontainers:jdbc:${versions.testcontainers}"
+}
+
+// === SPRING BOOT CONFIGURATION ===
+springBoot {
+    buildInfo()
+}
+
+// === SOURCE SETS ===
+sourceSets {
+    main {
+        java {
+            srcDir "$buildDir/generated/src/main/java"
+        }
+    }
+}
+
+// === OPENAPI GENERATION ===
+openApiGenerate {
+    generatorName = "spring"
+    inputSpec = "$rootDir/src/main/resources/mcloude-orders-open-api-contract.yaml"
+    outputDir = "$buildDir/generated"
+    apiPackage = "ru.mentee.power.api.generated.controller"
+    modelPackage = "ru.mentee.power.api.generated.dto"
+    configOptions = [
+            dateLibrary          : "java8",
+            interfaceOnly        : "true",
+            useTags              : "true",
+            performBeanValidation: "true",
+            useBeanValidation    : "true",
+            useSpringBoot3       : "true"
+    ]
+}
+
+// === LIQUIBASE CONFIGURATION ===
+liquibase {
+    activities {
+        main {
+            changelogFile 'src/main/resources/liquibase/changelog-master.yml'
+            url 'jdbc:postgresql://localhost:5432/orders'
+            username 'orders'
+            password 'secret'
+            driver 'org.postgresql.Driver'
+            logLevel 'info'
+        }
+        dev {
+            changelogFile 'src/main/resources/liquibase/changelog-master.yml'
+            url 'jdbc:postgresql://localhost:5432/orders'
+            username 'orders'
+            password 'secret'
+            driver 'org.postgresql.Driver'
+        }
+        test {
+            changelogFile 'src/main/resources/liquibase/changelog-master.yml'
+            url 'jdbc:h2:mem:testdb'
+            username 'sa'
+            password ''
+            driver 'org.h2.Driver'
+        }
+    }
+    runList = project.hasProperty('liquibaseProfile') ? project.liquibaseProfile : 'main'
+}
+
+
+// === CHECKSTYLE ===
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file("${rootDir}/config/checkstyle/google_checks.xml")
+    maxErrors = 0
+    ignoreFailures = false
+}
+
+// === TESTS CONFIGURATION ===
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+    testLogging {
+        events "passed", "skipped", "failed"
+        showExceptions = true
+        exceptionFormat = 'full'
+    }
+}
+
+// === JACOCO COVERAGE ===
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/generated/**',
+                    '**/api/generated/**'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+        rule {
+            element = 'CLASS'
+            includes = ['ru.mentee.power.*']
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.8
+            }
+            excludes = [
+                    '**.*Config',
+                    '**.*Application',
+                    '**.*Exception',
+                    '**.*DTO',
+                    '**.*Entity',
+                    '**/generated/**'
+            ]
+        }
+    }
+}
+
+// === SPOTLESS FORMATTING ===
+spotless {
+    java {
+        target 'src/**/*.java', 'build/generated/src/main/java/**/*.java'
+        googleJavaFormat("${versions.googleJavaFormat}").aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        licenseHeader '/* @MENTEE_POWER (C)$YEAR */'
+    }
+
+    sql {
+        target 'src/**/*.sql'
+        dbeaver()
+    }
+
+    format 'misc', {
+        target '*.gradle', '*.md', '.gitignore', '.gitattributes'
+        trimTrailingWhitespace()
+        indentWithSpaces(4)
+        endWithNewline()
+    }
+
+    enforceCheck = true
+}
+
+// === TASK DEPENDENCIES ===
+tasks.named('openApiGenerate') {
+    outputs.dir("$buildDir/generated")
+}
+
+tasks.named('compileJava') {
+    dependsOn 'openApiGenerate', 'spotlessApply'
+}
+
+tasks.named('compileTestJava') {
+    dependsOn 'spotlessApply'
+}
+
+tasks.named('check') {
+    dependsOn jacocoTestCoverageVerification, 'checkstyleMain', 'checkstyleTest', 'spotlessCheck'
+}
+
+tasks.named('build') {
+    dependsOn 'check', 'jacocoTestReport'
+}
+
+tasks.named('clean') {
+    doLast {
+        delete "$buildDir/generated"
+    }
+}
+
+tasks.named('spotlessJava') {
+    dependsOn tasks.named('openApiGenerate')
+}
+
+tasks.named('spotlessCheck') {
+    dependsOn tasks.named('openApiGenerate')
+}
+
+// === EXTRA FORMAT TASKS ===
+tasks.register('format') {
+    group = 'formatting'
+    description = 'Formats all source code including generated'
+    dependsOn 'spotlessApply'
+}
+
+tasks.register('checkFormat') {
+    group = 'formatting'
+    description = 'Checks code formatting including generated'
+    dependsOn 'spotlessCheck'
+}
+
+tasks.register('formatGenerated') {
+    group = 'formatting'
+    description = 'Formats only generated code'
+    dependsOn 'openApiGenerate'
+    doLast {
+        spotlessApply.execute()
+    }
+}
+
+// === ASSEMBLY TASK ===
+tasks.register('assembly') {
+    group = 'build'
+    description = 'Builds the complete application with all checks'
+    dependsOn 'clean', 'build'
+}
+
+// === BOOT RUN CONFIGURATION ===
+bootRun {
+    systemProperties = System.properties
+    jvmArgs = ['-Xmx512m', '-Dspring.profiles.active=dev']
 }

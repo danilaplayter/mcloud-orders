@@ -24,12 +24,42 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    container_name: orders-postgres
     environment:
       POSTGRES_DB: orders
       POSTGRES_USER: orders
-      POSTGRES_PASSWORD: orders
+      POSTGRES_PASSWORD: secret
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8.2
+    container_name: orders-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: mentor@company.ru
+      PGADMIN_DEFAULT_PASSWORD: Mentor123!
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   akhq:
     image: tchiotludo/akhq:0.24.0
@@ -44,3 +74,7 @@ services:
             local-kafka:
               properties:
                 bootstrap.servers: "kafka:29092"
+
+volumes:
+  postgres_data:
+  pgadmin_data:
