@@ -1,26 +1,27 @@
 /* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.adapters.web;
 
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.mentee.power.api.generated.controller.DefaultApi;
+import ru.mentee.power.api.generated.controller.OrdersApi;
+import ru.mentee.power.api.generated.dto.OrderAcceptedResponse;
 import ru.mentee.power.api.generated.dto.OrderRequest;
-import ru.mentee.power.api.generated.dto.OrderResponse;
+import ru.mentee.power.api.generated.dto.ProducerMetricsResponse;
 
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
-public class OrderController implements DefaultApi {
+public class OrderController implements OrdersApi {
+
     @Override
-    public ResponseEntity<OrderResponse> createOrder(OrderRequest orderRequest) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public ResponseEntity<ProducerMetricsResponse> getOrderProducerMetrics() {
+        return OrdersApi.super.getOrderProducerMetrics();
     }
 
     @Override
-    public ResponseEntity<OrderResponse> getOrder(UUID orderId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public ResponseEntity<OrderAcceptedResponse> submitOrder(OrderRequest orderRequest) {
+        return OrdersApi.super.submitOrder(orderRequest);
     }
 }

@@ -10,7 +10,7 @@ public class PlaceOrderUseCase implements PlaceOrderPort {
     private final OrderEventPort orderEventPort;
 
     @Override
-    public Order placeOrder(Order order) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public PlaceOrderResult placeOrder(PlaceOrderCommand placeOrderCommand) {
+        return null;
     }
 }
