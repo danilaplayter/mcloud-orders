@@ -1,0 +1,112 @@
+@startuml
+!theme plain
+
+package "adapters.kafka" {
+class KafkaConfig {
+- ProducerFactory<String, Order> producerFactory()
+- KafkaTemplate<String, Order> kafkaTemplate()
+}
+
+class KafkaHealthIndicator {
++ Health health()
+}
+}
+
+package "adapters.web" {
+class OrderController {
++ ResponseEntity<Order> createOrder()
++ ResponseEntity<Order> getOrder()
++ ResponseEntity<List<Order>> getOrders()
+}
+}
+
+package "domain.model" {
+class Order {
+- Long id
+- String customerId
+- List<OrderLine> orderLines
+- OrderStatus status
+- Priority priority
++ calculateTotal()
+}
+
+class OrderLine {
+- String productId
+- Integer quantity
+- BigDecimal price
+}
+
+enum OrderStatus {
+PENDING
+CONFIRMED
+SHIPPED
+DELIVERED
+CANCELLED
+}
+
+enum Priority {
+LOW
+MEDIUM
+HIGH
+URGENT
+}
+
+class PlaceOrderUseCase {
+- OrderRepository orderRepository
++ Order placeOrder(Order order)
+}
+}
+
+package "persistence" {
+interface OrderRepository {
++ save(Order order)
++ findById(Long id)
++ findAll()
+}
+
+class OrderMapper {
++ toEntity(Order order)
++ toDomain(OrderEntity entity)
+}
+}
+
+package "ports" {
+class MCloudOrdersApplication {
++ main(String[] args)
+}
+}
+
+' Зависимости между пакетами
+OrderController --> PlaceOrderUseCase
+OrderController --> Order
+OrderController --> OrderStatus
+
+KafkaConfig --> Order
+KafkaConfig --> OrderRepository
+
+KafkaHealthIndicator --> Order
+
+PlaceOrderUseCase --> OrderRepository
+PlaceOrderUseCase --> Order
+
+OrderRepository --> Order
+OrderMapper --> Order
+
+MCloudOrdersApplication --> OrderController
+MCloudOrdersApplication --> KafkaConfig
+MCloudOrdersApplication --> OrderRepository
+MCloudOrdersApplication --> PlaceOrderUseCase
+
+' Композиции внутри доменной модели
+Order "1" *-- "many" OrderLine
+Order --> OrderStatus
+Order --> Priority
+
+' Стереотипы для лучшей визуализации
+OrderRepository <<interface>>
+PlaceOrderUseCase <<service>>
+OrderController <<rest controller>>
+MCloudOrdersApplication <<spring boot application>>
+
+@enduml
+

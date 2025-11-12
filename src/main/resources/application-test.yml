@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb?TC_INITSCRIPT=file:src/resources/liquibase/changesets/20250220-create-orders-table.sql
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
+    hikari:
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+
+  liquibase:
+    enabled: false
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: order-service-test
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+      auto-offset-reset: earliest
+
+kafka:
+  topics:
+    order-events: order-events-test
+    order-status: order-status-test
+
+logging:
+  level:
+    root: WARN
+    ru.mentee.power.orders: INFO
+    org.testcontainers: INFO
+    org.hibernate.SQL: DEBUG
+
+server:
+  port: 0
