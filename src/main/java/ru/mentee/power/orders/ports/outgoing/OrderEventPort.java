@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import ru.mentee.power.orders.domain.model.Order.OrderPriority;
-import ru.mentee.power.orders.domain.model.OrderLine;
 
 public interface OrderEventPort {
 
@@ -16,7 +15,7 @@ public interface OrderEventPort {
             String region,
             Double amount,
             OrderPriority priority,
-            List<OrderLine> lines,
+            List<EventOrderLine> lines,
             OffsetDateTime emittedAt) {}
 
     record EventOrderLine(UUID productId, Integer quantity, Double price) {}

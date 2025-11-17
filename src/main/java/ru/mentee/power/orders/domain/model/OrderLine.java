@@ -29,6 +29,7 @@ public class OrderLine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "line_id") // Добавьте это соответствие
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

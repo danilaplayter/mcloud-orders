@@ -1,5 +1,5 @@
 /* @MENTEE_POWER (C)2025 */
-package ru.mentee.power.orders.adapters.kafka;
+package ru.mentee.power.orders.adapters.config;
 
 import java.util.HashMap;
 import java.util.Map;

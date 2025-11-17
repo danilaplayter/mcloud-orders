@@ -4,7 +4,7 @@
 CREATE
     TABLE
         orders(
-            order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            order_id UUID PRIMARY KEY,
             customer_id UUID NOT NULL,
             region VARCHAR(50) NOT NULL,
             priority VARCHAR(10) NOT NULL CHECK(
@@ -31,7 +31,7 @@ CREATE
 CREATE
     TABLE
         order_lines(
-            line_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            line_id UUID PRIMARY KEY,
             order_id UUID NOT NULL REFERENCES orders(order_id) ON
             DELETE
                 CASCADE,
@@ -47,30 +47,3 @@ CREATE
                 ),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
-
---changeset author:20250220-create-orders-indexes
---comment: Create indexes for orders table
-CREATE
-    INDEX idx_orders_status ON
-    orders(status);
-
-CREATE
-    INDEX idx_orders_created_at ON
-    orders(created_at);
-
-CREATE
-    INDEX idx_orders_customer_id ON
-    orders(customer_id);
-
-CREATE
-    INDEX idx_order_lines_order_id ON
-    order_lines(order_id);
-
-CREATE
-    INDEX idx_order_lines_product_id ON
-    order_lines(product_id);
-
---rollback-start
---rollback DROP TABLE order_lines;
---rollback DROP TABLE orders;
---rollback-end
