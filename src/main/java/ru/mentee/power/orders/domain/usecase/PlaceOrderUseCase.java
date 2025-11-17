@@ -1,12 +1,14 @@
 /* @MENTEE_POWER (C)2025 */
-package ru.mentee.power.orders.domain.model;
+package ru.mentee.power.orders.domain.usecase;
 
 import lombok.RequiredArgsConstructor;
 import ru.mentee.power.orders.adapters.mapper.OrderMapper;
+import ru.mentee.power.orders.domain.model.Order;
 import ru.mentee.power.orders.domain.model.Order.OrderStatus;
 import ru.mentee.power.orders.domain.validator.OrderValidator;
 import ru.mentee.power.orders.ports.incoming.PlaceOrderPort;
 import ru.mentee.power.orders.ports.outgoing.OrderEventPort;
+import ru.mentee.power.orders.ports.outgoing.OrderEventPort.OrderEventPayload;
 
 @RequiredArgsConstructor
 public class PlaceOrderUseCase implements PlaceOrderPort {
@@ -16,11 +18,12 @@ public class PlaceOrderUseCase implements PlaceOrderPort {
 
     @Override
     public PlaceOrderResult placeOrder(PlaceOrderCommand placeOrderCommand) {
+
         validator.validate(placeOrderCommand);
 
         Order order = orderMapper.toOrder(placeOrderCommand);
 
-        OrderEventPort.OrderEventPayload orderEventPayload = orderMapper.toOrderEventPayload(order);
+        OrderEventPayload orderEventPayload = orderMapper.toOrderEventPayload(order);
 
         orderEventPort.publish(orderEventPayload);
 
