@@ -1,8 +1,25 @@
 /* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.ports.incoming;
 
-import ru.mentee.power.orders.domain.model.Order;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+import ru.mentee.power.orders.domain.model.Order.OrderPriority;
+import ru.mentee.power.orders.domain.model.Order.OrderStatus;
+import ru.mentee.power.orders.ports.outgoing.OrderEventPort.EventOrderLine;
 
 public interface PlaceOrderPort {
-    Order placeOrder(Order order);
+
+    PlaceOrderResult placeOrder(PlaceOrderCommand placeOrderCommand);
+
+    record PlaceOrderCommand(
+            UUID customerId,
+            String region,
+            Double amount,
+            List<EventOrderLine> lines,
+            OrderPriority orderPriority) {}
+
+    record OrderLineCommand(UUID productId, Integer quantity, Double price) {}
+
+    record PlaceOrderResult(UUID orderId, OrderStatus orderStatus, OffsetDateTime dispatchedAt) {}
 }
