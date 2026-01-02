@@ -29,10 +29,10 @@ public class OrderValidator {
         if (line.productId() == null) {
             throw new OrderValidationException("Product ID is required in order line");
         }
-        if (line.quantity() == null || line.quantity() <= 0) {
+        if (line.quantity() <= 0) {
             throw new OrderValidationException("Line quantity must be positive");
         }
-        if (line.price() == null || line.price() < 0) {
+        if (line.price() < 0) {
             throw new OrderValidationException("Line price cannot be negative");
         }
     }

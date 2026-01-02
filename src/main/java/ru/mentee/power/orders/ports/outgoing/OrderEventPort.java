@@ -5,20 +5,20 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import ru.mentee.power.orders.domain.model.Order.OrderPriority;
+import ru.mentee.power.orders.domain.model.Order;
 
 public interface OrderEventPort {
 
     record OrderEventPayload(
             UUID orderId,
             UUID customerId,
+            Order.OrderPriority priority,
             String region,
-            Double amount,
-            OrderPriority priority,
-            List<EventOrderLine> lines,
-            OffsetDateTime emittedAt) {}
+            double amount, // Используем double вместо BigDecimal
+            OffsetDateTime emittedAt,
+            List<EventOrderLine> lines) {}
 
-    record EventOrderLine(UUID productId, Integer quantity, Double price) {}
+    record EventOrderLine(UUID productId, int quantity, double price) {}
 
     CompletableFuture<Void> publish(OrderEventPayload payload);
 }

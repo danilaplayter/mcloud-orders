@@ -10,7 +10,6 @@ import ru.mentee.power.orders.domain.model.Order;
 import ru.mentee.power.orders.domain.model.OrderLine;
 import ru.mentee.power.orders.ports.incoming.PlaceOrderPort;
 import ru.mentee.power.orders.ports.outgoing.OrderEventPort;
-import ru.mentee.power.orders.ports.outgoing.OrderEventPort.EventOrderLine;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
@@ -27,16 +26,16 @@ public interface OrderMapper {
     @Mapping(target = "price", source = "price")
     OrderEventPort.EventOrderLine toEventOrderLine(OrderLineRequest lineRequest);
 
-    @Mapping(target = "orderId", expression = "java(UUID.randomUUID())")
+    @Mapping(target = "orderId", expression = "java(java.util.UUID.randomUUID())")
     @Mapping(target = "status", constant = "QUEUED")
     @Mapping(target = "customerId", source = "customerId")
     @Mapping(target = "region", source = "region")
     @Mapping(target = "amount", source = "amount")
     @Mapping(target = "priority", source = "orderPriority")
-    @Mapping(target = "lines", source = "lines")
     @Mapping(target = "dispatchedAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "lines", ignore = true) // Игнорируем lines, они добавляются отдельно
     Order toOrder(PlaceOrderPort.PlaceOrderCommand command);
 
     @Mapping(target = "productId", source = "productId")
@@ -47,7 +46,7 @@ public interface OrderMapper {
     @Mapping(target = "orderId", source = "orderId")
     @Mapping(target = "customerId", source = "customerId")
     @Mapping(target = "region", source = "region")
-    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "amount", expression = "java(order.getAmount().doubleValue())")
     @Mapping(target = "priority", source = "priority")
     @Mapping(target = "lines", source = "lines")
     @Mapping(target = "emittedAt", expression = "java(java.time.OffsetDateTime.now())")
@@ -55,10 +54,22 @@ public interface OrderMapper {
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "quantity")
-    @Mapping(target = "price", source = "price")
+    @Mapping(target = "price", expression = "java(orderLine.getPrice().doubleValue())")
     OrderEventPort.EventOrderLine toEventOrderLine(OrderLine orderLine);
 
-    List<EventOrderLine> toEventOrderLines(List<OrderLine> orderLines);
+    List<OrderEventPort.EventOrderLine> toEventOrderLines(List<OrderLine> orderLines);
 
     List<PlaceOrderPort.OrderLineCommand> toOrderLineCommands(List<OrderLineRequest> lineRequests);
+
+    default OrderLine toOrderLine(PlaceOrderPort.OrderLineCommand command) {
+        OrderLine orderLine = new OrderLine();
+        orderLine.setProductId(command.productId());
+        orderLine.setQuantity(command.quantity());
+        orderLine.setPrice(command.price());
+        return orderLine;
+    }
+
+    default List<OrderLine> toOrderLineList(List<PlaceOrderPort.OrderLineCommand> commands) {
+        return commands.stream().map(this::toOrderLine).toList();
+    }
 }

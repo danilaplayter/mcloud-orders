@@ -1,6 +1,7 @@
 /* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.ports.incoming;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public interface PlaceOrderPort {
             List<EventOrderLine> lines,
             OrderPriority orderPriority) {}
 
-    record OrderLineCommand(UUID productId, Integer quantity, Double price) {}
+    record OrderLineCommand(UUID productId, Integer quantity, BigDecimal price) {}
 
     record PlaceOrderResult(UUID orderId, OrderStatus orderStatus, OffsetDateTime dispatchedAt) {}
 }
