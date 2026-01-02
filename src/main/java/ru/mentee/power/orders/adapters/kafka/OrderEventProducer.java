@@ -15,23 +15,29 @@ import ru.mentee.power.orders.ports.outgoing.OrderEventPort;
 @RequiredArgsConstructor
 public class OrderEventProducer implements OrderEventPort {
 
-    private final KafkaTemplate<String, OrderEventPayload> kafkaTemplate;
+    private final KafkaTemplate<String, ru.mentee.power.orders.adapters.kafka.OrderEventPayload>
+            kafkaTemplate;
     private final KafkaTopicResolver topicResolver;
     private final ProducerMetricsRegistry metricsRegistry;
+    private final OrderEventMapper mapper;
 
     @Override
-    public CompletableFuture<Void> publish(OrderEventPayload payload) {
+    public CompletableFuture<Void> publish(OrderEventPort.OrderEventPayload payload) {
+        String eventId = java.util.UUID.randomUUID().toString();
+        ru.mentee.power.orders.adapters.kafka.OrderEventPayload kafkaPayload =
+                mapper.fromProducerPayload(payload, eventId);
 
         String topic = topicResolver.resolve(payload.priority());
         String key = payload.region();
-        ProducerRecord<String, OrderEventPayload> record =
-                new ProducerRecord<>(topic, key, payload);
+
+        ProducerRecord<String, ru.mentee.power.orders.adapters.kafka.OrderEventPayload> record =
+                new ProducerRecord<>(topic, key, kafkaPayload);
+
         log.info(
                 "Sending order event to topic: {}, key: {}, orderId: {}",
                 topic,
                 key,
                 payload.orderId());
-        CompletableFuture<Void> future = new CompletableFuture<>();
 
         return kafkaTemplate
                 .send(record)

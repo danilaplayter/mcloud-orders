@@ -5,15 +5,15 @@ spring:
   application:
     name: mcloud-orders
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: orders
+    password: secret
+    driver-class-name: org.postgresql.Driver
+
   liquibase:
     change-log: classpath:liquibase/changelog-master.yml
     enabled: true
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    properties:
-      topic:
-        name: order-events
 
   jpa:
     hibernate:
@@ -23,12 +23,42 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
+        default_schema: crm
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    # Producer конфигурация (уже есть)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    # Consumer конфигурация (ДОБАВИТЬ ЭТО!)
+    consumer:
+      group-id: mcloud-orders-consumer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.json.trusted.packages: "ru.mentee.power.orders.*"
+        max.poll.records: 5
+        max.poll.interval.ms: 120000
+
+kafka:
+  topics:
+    orders:
+      priority:
+        high: orders.priority.high
+        normal: orders.priority.normal
+        low: orders.priority.low
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
@@ -39,5 +69,10 @@ management:
 
 logging:
   level:
+    ru.mentee.power.orders: INFO
+    ru.mentee.power.orders.adapters.kafka: DEBUG
+    ru.mentee.power.orders.domain.usecase: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
