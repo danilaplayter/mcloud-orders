@@ -29,7 +29,7 @@ public class OrderEventListener {
     public void listen(
             @Valid @Payload
                     ru.mentee.power.orders.adapters.kafka.OrderEventPayload
-                            payload, // Явно указываем полный путь
+                            payload,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) Integer partition,
             @Header(KafkaHeaders.OFFSET) Long offset,

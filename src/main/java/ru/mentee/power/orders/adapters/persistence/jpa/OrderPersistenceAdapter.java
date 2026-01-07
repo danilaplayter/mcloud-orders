@@ -1,15 +1,15 @@
-/* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.adapters.persistence.jpa;
 
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.mentee.power.orders.domain.model.Order;
-import ru.mentee.power.orders.domain.model.Order.OrderStatus;
 import ru.mentee.power.orders.domain.model.OrderLine;
 import ru.mentee.power.orders.ports.outgoing.OrderPersistencePort;
+
+import java.time.Instant;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,6 +17,7 @@ import ru.mentee.power.orders.ports.outgoing.OrderPersistencePort;
 public class OrderPersistenceAdapter implements OrderPersistencePort {
 
     private final SpringOrderRepository repository;
+    private final OrderEntityMapper orderEntityMapper;
 
     @Override
     public boolean existsByEventId(String eventId) {
@@ -29,68 +30,44 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
         try {
             log.info("Сохранение заказа в БД: orderId={}, eventId={}", order.getOrderId(), eventId);
 
-            // Проверяем, не существует ли уже такой заказ
             if (existsByEventId(eventId)) {
                 log.debug("Заказ уже существует в БД по eventId: {}", eventId);
                 return;
             }
 
-            // Создаем сущность заказа
-            OrderEntity orderEntity =
-                    OrderEntity.builder()
-                            .orderId(order.getOrderId())
-                            .customerId(order.getCustomerId())
-                            .priority(order.getPriority())
-                            .region(order.getRegion())
-                            .amount(order.getAmount())
-                            .status(
-                                    order.getStatus() != null
-                                            ? order.getStatus()
-                                            : OrderStatus.PROCESSING)
-                            .eventId(eventId)
-                            .emittedAt(
-                                    order.getDispatchedAt() != null
-                                            ? order.getDispatchedAt().toInstant()
-                                            : null)
-                            .dispatchedAt(order.getDispatchedAt())
-                            .processedAt(Instant.now())
-                            .build();
+            OrderEntity orderEntity = orderEntityMapper.toOrderEntityWithEventId(
+                order,
+                eventId,
+                Instant.now()
+            );
 
-            // Сохраняем заказ
             OrderEntity savedOrder = repository.save(orderEntity);
             log.debug("Заказ сохранен: {}", savedOrder.getOrderId());
 
-            // Сохраняем позиции заказа
-            if (order.getLines() != null && !order.getLines().isEmpty()) {
-                for (OrderLine line : order.getLines()) {
-                    OrderLineEntity lineEntity =
-                            OrderLineEntity.builder()
-                                    .order(savedOrder)
-                                    .productId(line.getProductId())
-                                    .quantity(line.getQuantity())
-                                    .price(line.getPrice())
-                                    .build();
+            saveOrderLines(order, savedOrder);
 
-                    // Сохраняем через каскад или явно
-                    savedOrder.getLines().add(lineEntity);
-                }
-                repository.save(savedOrder); // Сохраняем каскадно
-                log.debug("Сохранено {} позиций заказа", order.getLines().size());
-            }
-
-            log.info(
-                    "Заказ успешно сохранен в БД: orderId={}, eventId={}",
-                    order.getOrderId(),
-                    eventId);
+            log.info("Заказ успешно сохранен в БД: orderId={}, eventId={}",
+                order.getOrderId(), eventId);
 
         } catch (Exception e) {
-            log.error(
-                    "Ошибка сохранения заказа в БД: orderId={}, eventId={}, error={}",
-                    order.getOrderId(),
-                    eventId,
-                    e.getMessage(),
-                    e);
+            log.error("Ошибка сохранения заказа в БД: orderId={}, eventId={}, error={}",
+                order.getOrderId(), eventId, e.getMessage(), e);
             throw new RuntimeException("Ошибка сохранения заказа: " + e.getMessage(), e);
         }
+    }
+
+    private void saveOrderLines(Order order, OrderEntity savedOrder) {
+        Optional.ofNullable(order.getLines())
+            .filter(lines -> !lines.isEmpty())
+            .ifPresent(lines -> {
+                lines.forEach(line -> {
+                    OrderLineEntity lineEntity = orderEntityMapper.toOrderLineEntity(line);
+                    lineEntity.setOrder(savedOrder);
+                    savedOrder.getLines().add(lineEntity);
+                });
+
+                repository.save(savedOrder); // Сохраняем каскадно
+                log.debug("Сохранено {} позиций заказа", lines.size());
+            });
     }
 }
