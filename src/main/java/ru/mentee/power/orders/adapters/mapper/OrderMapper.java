@@ -73,11 +73,9 @@ public interface OrderMapper {
     }
 
     default List<OrderLine> toOrderLineList(List<PlaceOrderPort.OrderLineCommand> commands) {
-        return Optional.ofNullable(commands)
-            .orElse(List.of())
-            .stream()
-            .map(this::toOrderLine)
-            .toList();
+        return Optional.ofNullable(commands).orElse(List.of()).stream()
+                .map(this::toOrderLine)
+                .toList();
     }
 
     @Named("mapPrice")
@@ -87,10 +85,8 @@ public interface OrderMapper {
 
     @Named("safeLines")
     default List<OrderEventPort.EventOrderLine> safeLines(List<OrderLine> lines) {
-        return Optional.ofNullable(lines)
-            .orElse(List.of())
-            .stream()
-            .map(this::toEventOrderLine)
-            .toList();
+        return Optional.ofNullable(lines).orElse(List.of()).stream()
+                .map(this::toEventOrderLine)
+                .toList();
     }
 }
