@@ -1,9 +1,12 @@
 /* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.adapters.mapper;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import ru.mentee.power.api.generated.dto.OrderLineRequest;
 import ru.mentee.power.api.generated.dto.OrderRequest;
 import ru.mentee.power.orders.domain.model.Order;
@@ -35,12 +38,12 @@ public interface OrderMapper {
     @Mapping(target = "dispatchedAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "lines", ignore = true) // Игнорируем lines, они добавляются отдельно
+    @Mapping(target = "lines", ignore = true)
     Order toOrder(PlaceOrderPort.PlaceOrderCommand command);
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "quantity")
-    @Mapping(target = "price", source = "price")
+    @Mapping(target = "price", source = "price", qualifiedByName = "mapPrice")
     PlaceOrderPort.OrderLineCommand toOrderLineCommand(OrderLineRequest lineRequest);
 
     @Mapping(target = "orderId", source = "orderId")
@@ -48,7 +51,7 @@ public interface OrderMapper {
     @Mapping(target = "region", source = "region")
     @Mapping(target = "amount", expression = "java(order.getAmount().doubleValue())")
     @Mapping(target = "priority", source = "priority")
-    @Mapping(target = "lines", source = "lines")
+    @Mapping(target = "lines", source = "lines", qualifiedByName = "safeLines")
     @Mapping(target = "emittedAt", expression = "java(java.time.OffsetDateTime.now())")
     OrderEventPort.OrderEventPayload toOrderEventPayload(Order order);
 
@@ -65,11 +68,25 @@ public interface OrderMapper {
         OrderLine orderLine = new OrderLine();
         orderLine.setProductId(command.productId());
         orderLine.setQuantity(command.quantity());
-        orderLine.setPrice(command.price());
+        orderLine.setPrice(Optional.ofNullable(command.price()).orElse(BigDecimal.ZERO));
         return orderLine;
     }
 
     default List<OrderLine> toOrderLineList(List<PlaceOrderPort.OrderLineCommand> commands) {
-        return commands.stream().map(this::toOrderLine).toList();
+        return Optional.ofNullable(commands).orElse(List.of()).stream()
+                .map(this::toOrderLine)
+                .toList();
+    }
+
+    @Named("mapPrice")
+    default Double mapPrice(Double price) {
+        return Optional.ofNullable(price).orElse(0.0);
+    }
+
+    @Named("safeLines")
+    default List<OrderEventPort.EventOrderLine> safeLines(List<OrderLine> lines) {
+        return Optional.ofNullable(lines).orElse(List.of()).stream()
+                .map(this::toEventOrderLine)
+                .toList();
     }
 }

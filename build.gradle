@@ -244,7 +244,6 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        licenseHeader '/* @MENTEE_POWER (C)$YEAR */'
     }
 
     sql {

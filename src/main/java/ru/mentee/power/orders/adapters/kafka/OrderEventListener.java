@@ -27,9 +27,7 @@ public class OrderEventListener {
             topics = {"orders.priority.high", "orders.priority.normal", "orders.priority.low"},
             containerFactory = "kafkaListenerContainerFactory")
     public void listen(
-            @Valid @Payload
-                    ru.mentee.power.orders.adapters.kafka.OrderEventPayload
-                            payload, // Явно указываем полный путь
+            @Valid @Payload ru.mentee.power.orders.adapters.kafka.OrderEventPayload payload,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) Integer partition,
             @Header(KafkaHeaders.OFFSET) Long offset,
