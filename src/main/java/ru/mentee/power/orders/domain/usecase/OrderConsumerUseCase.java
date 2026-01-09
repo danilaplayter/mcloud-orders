@@ -21,14 +21,13 @@ public class OrderConsumerUseCase implements ProcessOrderEventPort {
     @Override
     @Transactional
     public void handle(Command command) {
-        // Проверка идемпотентности по eventId
         if (persistencePort.existsByEventId(command.eventId())) {
             log.info("Дубликат события уже обработан: eventId={}", command.eventId());
             return;
         }
 
+        // перенести в маппер
         try {
-            // Создаем доменную модель Order
             Order order = new Order();
             order.setOrderId(command.orderId());
             order.setCustomerId(command.customerId());
@@ -38,7 +37,6 @@ public class OrderConsumerUseCase implements ProcessOrderEventPort {
             order.setStatus(OrderStatus.PROCESSING);
             order.setDispatchedAt(command.emittedAt().atOffset(java.time.ZoneOffset.UTC));
 
-            // Добавляем позиции заказа
             command.lines()
                     .forEach(
                             line -> {
@@ -49,7 +47,6 @@ public class OrderConsumerUseCase implements ProcessOrderEventPort {
                                 order.addOrderLine(orderLine);
                             });
 
-            // Сохраняем в БД с eventId для идемпотентности
             persistencePort.save(order, command.eventId());
 
             log.info(
