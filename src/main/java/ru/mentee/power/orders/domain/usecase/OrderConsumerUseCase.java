@@ -26,7 +26,7 @@ public class OrderConsumerUseCase implements ProcessOrderEventPort {
             return;
         }
 
-        // перенести в маппер
+        // перенести в маппер создание
         try {
             Order order = new Order();
             order.setOrderId(command.orderId());
