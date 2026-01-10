@@ -12,6 +12,7 @@ import ru.mentee.power.api.generated.dto.OrderRequest;
 import ru.mentee.power.orders.domain.model.Order;
 import ru.mentee.power.orders.domain.model.OrderLine;
 import ru.mentee.power.orders.ports.incoming.PlaceOrderPort;
+import ru.mentee.power.orders.ports.incoming.ProcessOrderEventPort;
 import ru.mentee.power.orders.ports.outgoing.OrderEventPort;
 
 @Mapper(componentModel = "spring")
@@ -59,6 +60,30 @@ public interface OrderMapper {
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "price", expression = "java(orderLine.getPrice().doubleValue())")
     OrderEventPort.EventOrderLine toEventOrderLine(OrderLine orderLine);
+
+    @Mapping(target = "orderId", source = "orderId")
+    @Mapping(target = "customerId", source = "customerId")
+    @Mapping(target = "region", source = "region")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "priority", source = "priority")
+    @Mapping(target = "status", constant = "PROCESSING")
+    @Mapping(target = "dispatchedAt", source = "emittedAt")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "lines", ignore = true)
+    Order toOrder(ProcessOrderEventPort.Command command);
+
+    @Mapping(target = "productId", source = "productId")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "price", source = "price", qualifiedByName = "bigDecimalPrice")
+    OrderLine toOrderLine(ProcessOrderEventPort.Command.OrderLine line);
+
+    @Named("bigDecimalPrice")
+    default BigDecimal mapPriceToBigDecimal(Double price) {
+        return Optional.ofNullable(price)
+            .map(BigDecimal::valueOf)
+            .orElse(BigDecimal.ZERO);
+    }
 
     List<OrderEventPort.EventOrderLine> toEventOrderLines(List<OrderLine> orderLines);
 

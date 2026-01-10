@@ -48,6 +48,43 @@ kafka:
         normal: orders.priority.normal
         low: orders.priority.low
 
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - org.springframework.dao.DataAccessException
+          - org.springframework.orm.jpa.JpaSystemException
+          - javax.persistence.PersistenceException
+          - java.sql.SQLException
+          - org.springframework.kafka.KafkaException
+          - org.apache.kafka.common.errors.TimeoutException
+          - org.apache.kafka.common.errors.NetworkException
+        ignore-exceptions:
+          - jakarta.validation.ConstraintViolationException
+          - org.springframework.web.bind.MethodArgumentNotValidException
+          - java.lang.IllegalArgumentException
+    instances:
+      order-processing:
+        base-config: default
+        wait-duration: 500ms
+        max-attempts: 3
+        retry-exceptions:
+          - org.springframework.dao.DataAccessException
+          - java.sql.SQLException
+          - javax.persistence.OptimisticLockException
+          - org.springframework.orm.ObjectOptimisticLockingFailureException
+      kafka-consumer-retry:
+        base-config: default
+        wait-duration: 1s
+        max-attempts: 5
+        retry-exceptions:
+          - org.springframework.kafka.KafkaException
+          - org.apache.kafka.common.errors.TimeoutException
+          - org.apache.kafka.common.errors.NetworkException
+
 management:
   endpoints:
     web:

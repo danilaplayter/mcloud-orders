@@ -16,6 +16,7 @@ public class ConsumerMetricsController {
 
     private final ConsumerMetricsRegistry metricsRegistry;
 
+    // тут тоже в маппер вынести
     @GetMapping("/metrics")
     public ResponseEntity<ConsumerMetricsResponse> getMetrics() {
         ConsumerMetricsResponse response =
