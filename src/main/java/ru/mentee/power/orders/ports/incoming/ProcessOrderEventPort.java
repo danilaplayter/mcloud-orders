@@ -16,7 +16,7 @@ public interface ProcessOrderEventPort {
     void handle(Command command);
 
     record Command(
-            @NotBlank String eventId,
+            @NotBlank UUID eventId,
             @NotNull UUID orderId,
             @NotNull UUID customerId,
             @NotNull Order.OrderPriority priority,

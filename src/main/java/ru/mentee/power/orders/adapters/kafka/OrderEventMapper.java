@@ -3,6 +3,7 @@ package ru.mentee.power.orders.adapters.kafka;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import ru.mentee.power.orders.ports.incoming.ProcessOrderEventPort;
 
@@ -30,7 +31,7 @@ public class OrderEventMapper {
 
     public OrderEventPayload fromProducerPayload(
             ru.mentee.power.orders.ports.outgoing.OrderEventPort.OrderEventPayload payload,
-            String eventId) {
+            UUID eventId) {
         return new OrderEventPayload(
                 eventId,
                 payload.orderId(),

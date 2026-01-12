@@ -18,7 +18,7 @@ import ru.mentee.power.orders.domain.model.Order.OrderPriority;
 import ru.mentee.power.orders.domain.model.Order.OrderStatus;
 
 @Entity
-@Table(name = "crm_orders", schema = "crm")
+@Table(name = "orders")
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,6 +26,7 @@ import ru.mentee.power.orders.domain.model.Order.OrderStatus;
 public class OrderEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "order_id")
     private UUID orderId;
 
@@ -47,7 +48,7 @@ public class OrderEntity {
     private OrderStatus status;
 
     @Column(name = "event_id", nullable = false, unique = true)
-    private String eventId;
+    private UUID eventId;
 
     @Column(name = "emitted_at")
     private Instant emittedAt;

@@ -12,8 +12,10 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -37,9 +39,14 @@ public class KafkaConsumerConfig {
                 JsonDeserializer.TYPE_MAPPINGS,
                 "orderEvent:ru.mentee.power.orders.adapters.kafka.OrderEventPayload");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 5);
-        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 120000);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000);
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 10000);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 3000);
+
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
@@ -49,8 +56,19 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+        factory.setCommonErrorHandler(noRetryErrorHandler());
+
         factory.setConcurrency(3);
+
+        factory.getContainerProperties().setPollTimeout(3000);
         return factory;
+    }
+
+    @Bean
+    public DefaultErrorHandler noRetryErrorHandler() {
+        return new DefaultErrorHandler(new FixedBackOff(0L, 0L));
     }
 }

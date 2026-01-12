@@ -8,7 +8,7 @@ import java.util.UUID;
 import ru.mentee.power.orders.domain.model.Order;
 
 public record OrderEventPayload(
-        String eventId,
+        UUID eventId,
         UUID orderId,
         UUID customerId,
         Order.OrderPriority priority,

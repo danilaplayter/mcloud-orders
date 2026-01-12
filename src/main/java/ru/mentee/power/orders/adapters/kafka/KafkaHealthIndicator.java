@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class KafkaHealthIndicator implements HealthIndicator {
 
     private final KafkaAdmin kafkaAdmin;
-    private static final String TOPIC_NAME = "order-events";
+    private static final String TOPIC_NAME = "orders.priority.high";
     private static final long TIMEOUT_MS = 5000;
 
     @Override
