@@ -23,7 +23,6 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
-        default_schema: crm
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
@@ -37,8 +36,29 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
         spring.json.trusted.packages: "ru.mentee.power.orders.*"
+        spring.json.type.mapping: "orderEvent:ru.mentee.power.orders.adapters.kafka.OrderEventPayload"
         max.poll.records: 5
-        max.poll.interval.ms: 120000
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+        isolation.level: read_committed
+
+      listener:
+        pause-immediately: false
+        missing-topics-fatal: false
+        ack-mode: manual_immediate
+
+    # Добавьте producer конфигурацию
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: "orderEvent:ru.mentee.power.orders.adapters.kafka.OrderEventPayload,deadLetterMessage:ru.mentee.power.orders.domain.model.DeadLetterMessage"
+        acks: all
+        retries: 3
+        enable.idempotence: true
+        delivery.timeout.ms: 120000
+        request.timeout.ms: 30000
 
 kafka:
   topics:
@@ -47,6 +67,8 @@ kafka:
         high: orders.priority.high
         normal: orders.priority.normal
         low: orders.priority.low
+    # Добавьте DLQ тему
+    dlq: orders.priority.dlq
 
 resilience4j:
   retry:
@@ -57,7 +79,7 @@ resilience4j:
         retry-exceptions:
           - org.springframework.dao.DataAccessException
           - org.springframework.orm.jpa.JpaSystemException
-          - javax.persistence.PersistenceException
+          - jakarta.persistence.OptimisticLockException
           - java.sql.SQLException
           - org.springframework.kafka.KafkaException
           - org.apache.kafka.common.errors.TimeoutException
@@ -74,7 +96,7 @@ resilience4j:
         retry-exceptions:
           - org.springframework.dao.DataAccessException
           - java.sql.SQLException
-          - javax.persistence.OptimisticLockException
+          - jakarta.persistence.OptimisticLockException
           - org.springframework.orm.ObjectOptimisticLockingFailureException
       kafka-consumer-retry:
         base-config: default

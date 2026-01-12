@@ -4,6 +4,7 @@ package ru.mentee.power.orders.adapters.kafka;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -15,6 +16,7 @@ import ru.mentee.power.orders.ports.incoming.ProcessOrderEventPort;
 
 @Slf4j
 @Component
+@Qualifier("orderProcessingUseCase")
 @RequiredArgsConstructor
 public class OrderEventListener {
 

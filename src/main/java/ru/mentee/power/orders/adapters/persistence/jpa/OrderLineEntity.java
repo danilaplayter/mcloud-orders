@@ -3,16 +3,15 @@ package ru.mentee.power.orders.adapters.persistence.jpa;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "crm_order_lines", schema = "crm")
+@Table(name = "order_lines")
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,9 +19,8 @@ import org.hibernate.annotations.CreationTimestamp;
 public class OrderLineEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "line_id")
-    private UUID id;
+    private UUID lineId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
@@ -34,10 +32,9 @@ public class OrderLineEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "price", nullable = false, precision = 19, scale = 4)
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 }

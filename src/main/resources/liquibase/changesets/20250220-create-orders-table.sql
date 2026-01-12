@@ -21,7 +21,10 @@ CREATE
                 amount >= 0.01
             ),
             status VARCHAR(20) NOT NULL DEFAULT 'QUEUED',
+            event_id UUID NOT NULL UNIQUE,
+            emitted_at TIMESTAMP WITH TIME ZONE,
             dispatched_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            processed_at TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );

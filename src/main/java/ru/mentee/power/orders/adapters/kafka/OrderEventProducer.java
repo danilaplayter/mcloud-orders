@@ -1,6 +1,7 @@
 /* @MENTEE_POWER (C)2025 */
 package ru.mentee.power.orders.adapters.kafka;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class OrderEventProducer implements OrderEventPort {
 
     @Override
     public CompletableFuture<Void> publish(OrderEventPort.OrderEventPayload payload) {
-        String eventId = java.util.UUID.randomUUID().toString();
+        UUID eventId = UUID.randomUUID();
         ru.mentee.power.orders.adapters.kafka.OrderEventPayload kafkaPayload =
                 mapper.fromProducerPayload(payload, eventId);
 

@@ -2,6 +2,7 @@ package ru.mentee.power.orders.adapters.persistence.jpa;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,13 +19,13 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
     private final OrderEntityMapper orderEntityMapper;
 
     @Override
-    public boolean existsByEventId(String eventId) {
+    public boolean existsByEventId(UUID eventId) {
         return repository.existsByEventId(eventId);
     }
 
     @Override
     @Transactional
-    public void save(Order order, String eventId) {
+    public void save(Order order, UUID eventId) {
         try {
             log.info("Сохранение заказа в БД: orderId={}, eventId={}", order.getOrderId(), eventId);
 

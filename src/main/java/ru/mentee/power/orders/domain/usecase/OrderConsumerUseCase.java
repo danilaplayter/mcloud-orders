@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.mentee.power.orders.adapters.mapper.OrderMapper;
+import ru.mentee.power.orders.domain.exception.OrderProcessingException;
 import ru.mentee.power.orders.domain.model.Order;
 import ru.mentee.power.orders.ports.incoming.ProcessOrderEventPort;
 import ru.mentee.power.orders.ports.outgoing.OrderPersistencePort;
@@ -27,25 +28,23 @@ public class OrderConsumerUseCase implements ProcessOrderEventPort {
         }
 
         try {
-            Order order = orderMapper.toOrder(command);
-
-            orderMapper.toOrderLineList(command.lines())
-                .forEach(order::addOrderLine);
-
+            Order order = orderMapper.toOrderFromEvent(command);
             persistencePort.save(order, command.eventId());
 
             log.info(
-                "Заказ успешно обработан: orderId={}, eventId={}",
-                command.orderId(),
-                command.eventId());
+                    "Заказ успешно обработан: orderId={}, eventId={}",
+                    command.orderId(),
+                    command.eventId());
 
         } catch (Exception e) {
             log.error(
-                "Ошибка обработки заказа: orderId={}, error={}",
-                command.orderId(),
-                e.getMessage(),
-                e);
-            throw new RuntimeException("Ошибка обработки заказа: " + e.getMessage(), e);
+                    "Ошибка обработки заказа: orderId={}, eventId={}, error={}",
+                    command.orderId(),
+                    command.eventId(),
+                    e.getMessage(),
+                    e);
+            throw new OrderProcessingException(
+                    "Ошибка обработки заказа: orderId=" + command.orderId(), e);
         }
     }
 }

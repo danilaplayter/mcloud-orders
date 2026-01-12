@@ -11,16 +11,16 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-import ru.mentee.power.orders.adapters.kafka.OrderEventPayload; // Измените импорт!
+import ru.mentee.power.orders.domain.model.DeadLetterMessage;
 
 @Configuration
-public class KafkaProducerConfig {
+public class KafkaDlqProducerConfig {
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, OrderEventPayload> producerFactory() {
+    public ProducerFactory<String, DeadLetterMessage> dlqProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -28,14 +28,18 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
+        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120000);
+        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30000);
+
         configProps.put(
                 JsonSerializer.TYPE_MAPPINGS,
-                "orderEvent:ru.mentee.power.orders.adapters.kafka.OrderEventPayload");
+                "deadLetterMessage:ru.mentee.power.orders.domain.model.DeadLetterMessage");
+
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
-    public KafkaTemplate<String, OrderEventPayload> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, DeadLetterMessage> dlqKafkaTemplate() {
+        return new KafkaTemplate<>(dlqProducerFactory());
     }
 }

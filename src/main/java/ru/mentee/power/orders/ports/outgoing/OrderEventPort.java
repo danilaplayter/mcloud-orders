@@ -14,7 +14,7 @@ public interface OrderEventPort {
             UUID customerId,
             Order.OrderPriority priority,
             String region,
-            double amount, // Используем double вместо BigDecimal
+            double amount,
             OffsetDateTime emittedAt,
             List<EventOrderLine> lines) {}
 

@@ -3,6 +3,7 @@ package ru.mentee.power.orders.adapters.persistence.jpa;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -60,7 +61,7 @@ public interface OrderEntityMapper {
         return price != null ? price : 0.0;
     }
 
-    default OrderEntity toOrderEntityWithEventId(Order order, String eventId, Instant processedAt) {
+    default OrderEntity toOrderEntityWithEventId(Order order, UUID eventId, Instant processedAt) {
         OrderEntity orderEntity = toOrderEntity(order);
         orderEntity.setEventId(eventId);
         orderEntity.setProcessedAt(processedAt);
