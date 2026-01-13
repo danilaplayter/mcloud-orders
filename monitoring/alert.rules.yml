@@ -1,0 +1,13 @@
+groups:
+  - name: outbox-alerts
+    rules:
+      - alert: OutboxPendingHigh
+        expr: outbox_events_pending > 100
+        for: 5m
+        labels:
+          severity: warning
+      - alert: OutboxFailedRateHigh
+        expr: rate(outbox_events_failed_total[10m]) > 0.5
+        for: 10m
+        labels:
+          severity: critical

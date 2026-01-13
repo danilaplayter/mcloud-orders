@@ -48,7 +48,6 @@ spring:
         missing-topics-fatal: false
         ack-mode: manual_immediate
 
-    # Добавьте producer конфигурацию
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -67,7 +66,6 @@ kafka:
         high: orders.priority.high
         normal: orders.priority.normal
         low: orders.priority.low
-    # Добавьте DLQ тему
     dlq: orders.priority.dlq
 
 resilience4j:

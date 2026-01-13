@@ -74,7 +74,24 @@ services:
             local-kafka:
               properties:
                 bootstrap.servers: "kafka:29092"
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert.rules.yml:/etc/prometheus/rules/alert.rules.yml:ro
+    depends_on:
+      - kafka
 
+  grafana:
+    image: grafana/grafana:10.4.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 volumes:
   postgres_data:
   pgadmin_data:

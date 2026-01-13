@@ -1,0 +1,24 @@
+{
+  "title": "Outbox Health",
+  "schemaVersion": 38,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pending",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6},
+      "targets": [{"expr": "outbox_events_pending"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Failed rate (5m)",
+      "gridPos": {"x": 6, "y": 0, "w": 9, "h": 6},
+      "targets": [{"expr": "rate(outbox_events_failed_total[5m])"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Publish latency p95",
+      "gridPos": {"x": 0, "y": 6, "w": 15, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(outbox_publish_time_seconds_bucket[5m])) by (le))"}]
+    }
+  ]
+}
