@@ -1,3 +1,4 @@
 databaseChangeLog:
   - include:
-      file: liquibase/changesets/20250220-create-orders-table.sql
+      file: liquibase/changelog/20250220-create-outbox.sql
+      relativeToChangelogFile: true
